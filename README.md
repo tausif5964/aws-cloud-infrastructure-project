@@ -4,7 +4,6 @@
 **Cloud Provider:** Amazon Web Services (AWS)  
 **AWS Region:** Asia Pacific (Mumbai) — `ap-south-1`  
 **Services:** Amazon VPC, EC2, Internet Gateway, Security Groups, Route Tables, Linux NAT, Windows Server, Amazon CloudWatch
-
 ---
 
 ## 1. Project Overview
