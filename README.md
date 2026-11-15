@@ -32,6 +32,8 @@ The project focuses on practical cloud infrastructure administration, network se
 
 ## 3. Architecture Overview
 
+![AWS Cloud Infrastructure Architecture](architecture/architecture-diagram.png)
+
 The infrastructure follows a two-subnet network design.
 
 **Public subnet**
