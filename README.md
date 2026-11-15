@@ -212,6 +212,40 @@ Through this project, I gained practical experience with:
 - EC2 monitoring through CloudWatch.
 - Cloud resource cleanup and cost awareness.
 
+## Implementation Evidence
+
+The following screenshots provide evidence of the AWS infrastructure configuration, deployment, connectivity testing, and monitoring.
+
+### 1. VPC and Network Architecture
+
+- [VPC Details](screenshots/01-VPC-Details.png)
+- [Subnet Configuration](screenshots/02-Subnets.png)
+- [Additional Subnet Details](screenshots/03-Subnets.png)
+- [Internet Gateway](screenshots/04-Internet-Gateway..png)
+- [Public Route Table](screenshots/05-Public-Route-Table.png)
+- [Private Route Table](screenshots/06-Private-Route-Table.png)
+
+### 2. Security Configuration
+
+- [Public EC2 Security Group](screenshots/07A-SG-Public-EC2.png)
+- [Private Windows Security Group](screenshots/07B-SG-Windows-Private.png)
+
+### 3. EC2 Infrastructure
+
+- [Linux EC2 Instance Details](screenshots/08-Linux-EC2-Details.png)
+- [Windows EC2 Instance Details](screenshots/09-Windows-EC2-Details.png)
+- [Linux SSH and System Details](screenshots/10-Linux-SSH-System-Details.png)
+- [Windows Private Network Configuration](screenshots/11-Windows-Private-Network.png)
+
+### 4. Secure Remote Access
+
+- [Windows RDP Through SSH Bastion Tunnel](screenshots/12-Windows-RDP-Through-Bastion.png)
+
+### 5. CloudWatch Monitoring
+
+- [CloudWatch NetworkIn — Evidence A](screenshots/13A--CloudWatch-NetworkIn.png)
+- [CloudWatch NetworkIn — Evidence B](screenshots/13B-CloudWatch-NetworkIn.png)
+
 ---
 
 **Project Status:** Implementation and connectivity validation completed.  
