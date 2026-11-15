@@ -1,0 +1,35 @@
+
+# AWS credentials and private keys
+*.pem
+*.ppk
+*.key
+credentials
+.aws/
+.env
+.env.*
+
+# Secrets and certificates
+*.p12
+*.pfx
+*.crt
+*.cer
+
+# Logs and temporary files
+*.log
+*.tmp
+*.temp
+*.bak
+*.swp
+*~
+
+# Windows files
+Thumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# macOS files
+.DS_Store
+
+# Editor and IDE files
+.vscode/
+.idea/
