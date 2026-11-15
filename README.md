@@ -4,13 +4,14 @@
 **Cloud Provider:** Amazon Web Services (AWS)  
 **AWS Region:** Asia Pacific (Mumbai) — `ap-south-1`  
 **Services:** Amazon VPC, EC2, Internet Gateway, Security Groups, Route Tables, Linux NAT, Windows Server, Amazon CloudWatch
+
 ---
 
 ## 1. Project Overview
 
 This project demonstrates the design, deployment, configuration, and validation of a segmented AWS cloud network containing public and private subnets.
 
-The infrastructure was designed to host a publicly accessible Linux EC2 instance and a private Windows Server EC2 instance. The Linux instance was configured to provide NAT functionality, enabling outbound internet connectivity for resources in the private subnet without assigning them public IP addresses.
+The infrastructure was designed to host a publicly accessible Linux EC2 instance and a private Windows Server EC2 instance. The Linux instance was configured to provide Network Address Translation (NAT), enabling outbound internet connectivity for resources in the private subnet without assigning them public IP addresses.
 
 Secure administrative access to the private Windows Server was established through SSH-based port forwarding via the Linux instance. Amazon CloudWatch was used to review EC2 performance and network metrics.
 
@@ -35,76 +36,88 @@ The project focuses on practical cloud infrastructure administration, network se
 
 The infrastructure follows a two-subnet network design.
 
-**Public subnet**
+### Public Subnet
+
 - Hosts an Amazon Linux 2023 EC2 instance.
 - Provides SSH-based administrative access.
 - Performs NAT for outbound traffic from the private subnet.
 - Uses the Internet Gateway for internet connectivity.
 
-**Private subnet**
+### Private Subnet
+
 - Hosts a Windows Server 2025 EC2 instance.
-- Does not assign a public IPv4 address.
+- Does not have a public IPv4 address assigned.
 - Uses the Linux NAT instance for outbound internet connectivity.
 - Allows administrative RDP access through SSH local port forwarding.
 
-**Monitoring**
+### Monitoring
+
 - Amazon CloudWatch provides EC2 CPU and network performance metrics.
 
-> The Linux EC2 instance is configured as a NAT instance. This project does not use AWS NAT Gateway.
+> **Architecture note:** The Linux EC2 instance is configured as a NAT instance. This project does not use AWS NAT Gateway.
 
 ## 4. Network Design
 
 | Component | Configuration |
 |---|---|
-| VPC | `10.20.0.0/24` |
-| Public subnet | `10.20.0.0/25` |
-| Private subnet | `10.20.0.128/25` |
+| VPC CIDR | `10.20.0.0/24` |
+| Public Subnet | `10.20.0.0/25` |
+| Private Subnet | `10.20.0.128/25` |
 | AWS Region | `ap-south-1` |
-| Public workload | Amazon Linux 2023 |
-| Private workload | Windows Server 2025 |
-| NAT mechanism | Linux EC2 NAT instance |
+| Public Workload | Amazon Linux 2023 |
+| Private Workload | Windows Server 2025 |
+| NAT Mechanism | Linux EC2 NAT instance |
 | Monitoring | Amazon CloudWatch |
 
-### Traffic flow
+### Traffic Flow
 
-**Public instance:**  
-Internet ↔ Internet Gateway ↔ Public subnet ↔ Linux EC2
+**Public instance**
 
-**Private instance outbound traffic:**  
-Windows EC2 → Private route table → Linux NAT instance → Internet Gateway → Internet
+Internet ↔ Internet Gateway ↔ Public Subnet ↔ Linux EC2
 
-**Private Windows administration:**  
-Administrator workstation → SSH tunnel → Linux EC2 → Private Windows Server (RDP)
+**Private instance outbound traffic**
+
+Windows EC2 → Private Route Table → Linux NAT Instance → Internet Gateway → Internet
+
+**Private Windows administration**
+
+Administrator Workstation → SSH Tunnel → Linux EC2 → Private Windows Server (RDP)
 
 ## 5. Implementation Summary
 
-### 5.1 VPC and subnet configuration
+### 5.1 VPC and Subnet Configuration
+
 - Created a custom VPC with a `/24` IPv4 CIDR block.
 - Created one public and one private subnet.
-- Configured public IPv4 assignment for the public subnet.
+- Enabled automatic public IPv4 assignment for the public subnet.
 - Kept automatic public IPv4 assignment disabled for the private subnet.
 
-### 5.2 Internet Gateway and routing
+### 5.2 Internet Gateway and Routing
+
 - Created and attached an Internet Gateway to the custom VPC.
 - Configured the public route table with a default route to the Internet Gateway.
 - Configured the private route table with a default route pointing to the Linux NAT instance's network interface.
 
-### 5.3 EC2 deployment
+### 5.3 EC2 Deployment
+
 - Deployed an Amazon Linux 2023 instance in the public subnet.
 - Deployed a Windows Server 2025 instance in the private subnet.
 - Configured security groups to control SSH and RDP access.
 
-### 5.4 Linux NAT configuration
+### 5.4 Linux NAT Configuration
+
 The Linux instance was configured to forward and translate traffic originating from the private subnet.
 
 Configuration included:
+
 - Disabling EC2 source/destination checks.
 - Enabling IPv4 packet forwarding.
 - Configuring IP masquerading using `nftables`.
 - Configuring forwarding rules for private subnet traffic.
 - Persisting the NAT configuration across service restarts.
 
-### 5.5 Secure Windows access
+### 5.5 Secure Windows Access Through SSH Tunnelling
+
 Configured SSH local port forwarding through the Linux instance to reach the private Windows Server over RDP.
 
 Example command (replace the key path and public IP with your own values):
@@ -119,13 +132,17 @@ The RDP client then connects to:
 localhost:13389
 ```
 
-### 5.6 CloudWatch monitoring
-Reviewed EC2 per-instance metrics, including:
-- CPUUtilization
-- NetworkIn
-- NetworkOut
+The SSH session must remain active while using the RDP connection.
 
-Basic monitoring was used for this lab.
+### 5.6 CloudWatch Monitoring
+
+Reviewed EC2 per-instance metrics using Amazon CloudWatch, including:
+
+- `CPUUtilization`
+- `NetworkIn`
+- `NetworkOut`
+
+Basic monitoring was used for this lab. Detailed monitoring was not enabled.
 
 ## 6. Validation and Test Results
 
@@ -140,7 +157,7 @@ The following tests were performed during implementation.
 | Internet connectivity | Linux EC2 | Successful |
 | CloudWatch metrics | EC2 instances | Metrics reviewed |
 
-**Windows connectivity evidence**
+### Windows Connectivity Evidence
 
 - `ping 8.8.8.8`: 4 packets sent, 4 received, 0% packet loss.
 - `nslookup google.com`: DNS resolution successful.
@@ -153,20 +170,35 @@ These results validate the tested connectivity paths at the time of the lab.
 - Administrative access to the private Windows instance was routed through the Linux bastion/NAT instance.
 - SSH access was restricted using a source IP-based security group rule.
 - RDP access was restricted to the permitted security group source.
-- The project used security groups to control instance-level network access.
-- Private keys and credentials are not part of this repository.
+- Security groups were used to control instance-level network access.
+- Private keys and credentials are not included in this repository.
 
-**Important:** This is a learning and portfolio lab, not a production-ready reference architecture. Production deployments should additionally evaluate high availability, managed NAT Gateway options, IAM least privilege, centralized logging, patch management, hardened access controls, and infrastructure-as-code.
+**Production considerations:** This is a learning and portfolio lab, not a production-ready reference architecture. Production deployments should additionally evaluate high availability, managed NAT Gateway options, IAM least privilege, centralized logging, patch management, hardened access controls, and infrastructure as code.
 
-## 8. Repository Structure
+## 8. Documentation
+
+The following documents provide additional technical details about the project.
+
+| Document | Description |
+|---|---|
+| [Network Design](architecture/network-design.md) | VPC, subnet design, network layout, and traffic flow |
+| [Implementation Guide](documentation/implementation-guide.md) | Infrastructure deployment and implementation steps |
+| [Linux NAT Configuration](documentation/linux-nat-configuration.md) | Linux packet forwarding, `nftables`, and NAT configuration |
+| [Security Configuration](documentation/security-configuration.md) | Security groups and administrative access controls |
+| [Connectivity Validation](documentation/connectivity-validation.md) | Connectivity tests and validation results |
+| [Troubleshooting](documentation/troubleshooting.md) | Issues encountered and troubleshooting procedures |
+| [Cost and Cleanup](documentation/cost-and-cleanup.md) | Lab cost awareness and resource cleanup |
+
+## 9. Repository Structure
 
 ```text
 aws-cloud-infrastructure-project/
 │
 ├── README.md
+├── .gitignore
 │
 ├── architecture/
-│   ├── architecture-diagram.png
+│   ├── AWS Cloud Network Architecture.png
 │   └── network-design.md
 │
 ├── documentation/
@@ -178,25 +210,71 @@ aws-cloud-infrastructure-project/
 │   └── cost-and-cleanup.md
 │
 └── screenshots/
-    ├── 01-vpc/
-    ├── 02-subnets/
-    ├── 03-routing/
-    ├── 04-security-groups/
-    ├── 05-ec2/
-    ├── 06-linux-nat/
-    ├── 07-windows-connectivity/
-    └── 08-cloudwatch/
+    ├── 01-VPC-Details.png
+    ├── 02-Subnets.png
+    ├── 03-Subnets.png
+    ├── 04-Internet-Gateway..png
+    ├── 05-Public-Route-Table.png
+    ├── 06-Private-Route-Table.png
+    ├── 07A-SG-Public-EC2.png
+    ├── 07B-SG-Windows-Private.png
+    ├── 08-Linux-EC2-Details.png
+    ├── 09-Windows-EC2-Details.png
+    ├── 10-Linux-SSH-System-Details.png
+    ├── 11-Windows-Private-Network.png
+    ├── 12-Windows-RDP-Through-Bastion.png
+    ├── 13A--CloudWatch-NetworkIn.png
+    └── 13B-CloudWatch-NetworkIn.png
 ```
 
-## 9. Cost Management and Cleanup
+## 10. Implementation Evidence
+
+The following screenshots provide visual evidence of the AWS infrastructure configuration, deployment, connectivity testing, and monitoring.
+
+### 10.1 VPC and Network Architecture
+
+- [VPC Details](screenshots/01-VPC-Details.png)
+- [Subnet Configuration](screenshots/02-Subnets.png)
+- [Additional Subnet Details](screenshots/03-Subnets.png)
+- [Internet Gateway](screenshots/04-Internet-Gateway..png)
+- [Public Route Table](screenshots/05-Public-Route-Table.png)
+- [Private Route Table](screenshots/06-Private-Route-Table.png)
+
+### 10.2 Security Configuration
+
+- [Public EC2 Security Group](screenshots/07A-SG-Public-EC2.png)
+- [Private Windows Security Group](screenshots/07B-SG-Windows-Private.png)
+
+### 10.3 EC2 Infrastructure
+
+- [Linux EC2 Instance Details](screenshots/08-Linux-EC2-Details.png)
+- [Windows EC2 Instance Details](screenshots/09-Windows-EC2-Details.png)
+- [Linux SSH and System Details](screenshots/10-Linux-SSH-System-Details.png)
+- [Windows Private Network Configuration](screenshots/11-Windows-Private-Network.png)
+
+### 10.4 Secure Remote Access
+
+- [Windows RDP Through SSH Bastion Tunnel](screenshots/12-Windows-RDP-Through-Bastion.png)
+
+### 10.5 CloudWatch Monitoring
+
+- [CloudWatch Monitoring Evidence A](screenshots/13A--CloudWatch-NetworkIn.png)
+- [CloudWatch Monitoring Evidence B](screenshots/13B-CloudWatch-NetworkIn.png)
+
+## 11. Cost Management and Cleanup
 
 The infrastructure was deployed as a temporary hands-on lab. After implementation and validation, the AWS resources were deleted as part of the cleanup process.
 
-The project emphasizes cost awareness, resource lifecycle management, and verification of cloud resource usage.
+The project emphasizes:
+
+- Cost awareness when deploying cloud resources.
+- Resource lifecycle management.
+- Reviewing service usage and estimated costs.
+- Cleaning up temporary infrastructure after testing.
 
 Before publishing screenshots, sensitive information such as account identifiers, public IP addresses, credentials, private keys, and other identifying details should be removed or masked.
 
-## 10. Key Learning Outcomes
+## 12. Key Learning Outcomes
 
 Through this project, I gained practical experience with:
 
@@ -211,42 +289,8 @@ Through this project, I gained practical experience with:
 - EC2 monitoring through CloudWatch.
 - Cloud resource cleanup and cost awareness.
 
-## Implementation Evidence
-
-The following screenshots provide evidence of the AWS infrastructure configuration, deployment, connectivity testing, and monitoring.
-
-### 1. VPC and Network Architecture
-
-- [VPC Details](screenshots/01-VPC-Details.png)
-- [Subnet Configuration](screenshots/02-Subnets.png)
-- [Additional Subnet Details](screenshots/03-Subnets.png)
-- [Internet Gateway](screenshots/04-Internet-Gateway..png)
-- [Public Route Table](screenshots/05-Public-Route-Table.png)
-- [Private Route Table](screenshots/06-Private-Route-Table.png)
-
-### 2. Security Configuration
-
-- [Public EC2 Security Group](screenshots/07A-SG-Public-EC2.png)
-- [Private Windows Security Group](screenshots/07B-SG-Windows-Private.png)
-
-### 3. EC2 Infrastructure
-
-- [Linux EC2 Instance Details](screenshots/08-Linux-EC2-Details.png)
-- [Windows EC2 Instance Details](screenshots/09-Windows-EC2-Details.png)
-- [Linux SSH and System Details](screenshots/10-Linux-SSH-System-Details.png)
-- [Windows Private Network Configuration](screenshots/11-Windows-Private-Network.png)
-
-### 4. Secure Remote Access
-
-- [Windows RDP Through SSH Bastion Tunnel](screenshots/12-Windows-RDP-Through-Bastion.png)
-
-### 5. CloudWatch Monitoring
-
-- [CloudWatch NetworkIn — Evidence A](screenshots/13A--CloudWatch-NetworkIn.png)
-- [CloudWatch NetworkIn — Evidence B](screenshots/13B-CloudWatch-NetworkIn.png)
-
 ---
 
 **Project Status:** Implementation and connectivity validation completed.  
 **Environment:** Personal AWS learning lab.  
-**Documentation:** Being organized for technical review and portfolio presentation.
+**Documentation:** Project documentation and implementation evidence included in this repository.
