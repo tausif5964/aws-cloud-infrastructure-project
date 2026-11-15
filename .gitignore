@@ -2,34 +2,27 @@
 # AWS credentials and private keys
 *.pem
 *.ppk
-*.key
-credentials
 .aws/
+credentials
+config
+
+# Environment variables and secrets
 .env
 .env.*
+!.env.example
+secrets/
+*.secret
 
-# Secrets and certificates
-*.p12
-*.pfx
-*.crt
-*.cer
+# Terraform files (for future infrastructure-as-code work)
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfvars
+*.tfvars.json
 
 # Logs and temporary files
 *.log
 *.tmp
-*.temp
 *.bak
-*.swp
-*~
-
-# Windows files
-Thumbs.db
-Desktop.ini
-$RECYCLE.BIN/
-
-# macOS files
 .DS_Store
-
-# Editor and IDE files
-.vscode/
-.idea/
+Thumbs.db
